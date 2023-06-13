@@ -25,7 +25,10 @@ async function handleSearchFormSubmit(event) {
     return;
   }
 
-  clearGallery();
+  if (gallery.children.length > 0) {
+    clearGallery();
+  }
+
   await fetchImages();
 }
 
@@ -47,12 +50,14 @@ async function fetchImages() {
 
     if (data.hits.length === 0) {
       Notiflix.Notify.info('Sorry, there are no images matching your search query. Please try again.');
-    } else {
-      renderImages(data.hits);
-      showLoadMoreButton();
-      const lightbox = new SimpleLightbox('.gallery a', {});
-      lightbox.refresh();
+      hideLoadMoreButton();
+      return;
     }
+
+    renderImages(data.hits);
+    showLoadMoreButton();
+    const lightbox = new SimpleLightbox('.gallery a', {});
+    lightbox.refresh();
 
     if (data.totalHits <= currentPage * 40) {
       hideLoadMoreButton();
@@ -61,11 +66,14 @@ async function fetchImages() {
       Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
     }
 
-    const { height: cardHeight } = document.querySelector('.gallery').firstElementChild.getBoundingClientRect();
-    window.scrollBy({
-      top: cardHeight * 2,
-      behavior: 'smooth',
-    });
+    const firstImage = document.querySelector('.gallery a');
+    if (firstImage) {
+      const { height: cardHeight } = firstImage.getBoundingClientRect();
+      window.scrollBy({
+        top: cardHeight * 2,
+        behavior: 'smooth',
+      });
+    }
   } catch (error) {
     console.error(error);
     Notiflix.Notify.failure('Failed to fetch images. Please try again later.');
